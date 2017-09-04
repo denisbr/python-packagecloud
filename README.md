@@ -1,5 +1,6 @@
-# python-packagecloud
-Python Package for Packagecloud
+# Packagecloud
+
+Python Module for Packagecloud
 
 Implements functions for working with:
 * master and read-tokens
@@ -11,11 +12,11 @@ https://packagecloud.io/docs/api
 
 ## Usage
 
-Example of how to purge all packages in a given repo:
+Example of how to destroy all packages in a given repo:
 
 ```
 #!/usr/bin/env python
-"""Destroy All Packages"""
+"""Destroy All Packages in myrepouser/myrepo"""
 from __future__ import print_function
 
 from PackageCloud import destroy_packages
@@ -24,18 +25,17 @@ from PackageCloud import get_all_packages
 
 def configure():
     """Configure"""
-    pkgcloud_token = "INSERT TOKEN FROM PACKAGECLOUD API SETTINGS"
-    pkgcloud_http_scheme = "https"
-    pkgcloud_api_domain = "packagecloud.io"
-    pkgcloud_api_version = "v1"
+    token = "INSERT TOKEN FROM PACKAGECLOUD API SETTINGS"
+    http_scheme = "https"
+    api_domain = "packagecloud.io"
+    api_version = "v1"
 
     conf = {
         'domain_base': '{}://{}:@{}'.format(
-            pkgcloud_http_scheme, pkgcloud_token, pkgcloud_api_domain),
+            http_scheme, token, api_domain),
         'url_base': '{}://{}:@{}/api/{}'.format(
-            pkgcloud_http_scheme, pkgcloud_token, pkgcloud_api_domain,
-            pkgcloud_api_version),
-        'token': pkgcloud_token,
+            http_scheme, token, api_domain, api_version),
+        'token': token,
         'debug': True
     }
 
