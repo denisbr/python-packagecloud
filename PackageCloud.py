@@ -34,7 +34,7 @@ def abort(errstr, errcode=1):
 
 
 def api_call(url, method, debug, **kwargs):
-    """Generic method to make HTTP requests to packagecloud API
+    """Generic method to make HTTP requests to the packagecloud API
 
        Will retry on connection error or timeout, until max retries
     """
