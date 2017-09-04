@@ -186,6 +186,8 @@ def destroy_master_token(user, repo, config, name):
                 eprint("ERROR: Destroying token %s failed" % name)
                 eprint("Result: %s" % resp)
 
+    return True
+
 
 ###########################################################
 # Packagecloud Read tokens                                #
