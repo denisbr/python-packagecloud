@@ -14,7 +14,7 @@ https://packagecloud.io/docs/api
 
 Example of how to destroy all packages in a given repo:
 
-```
+```python
 #!/usr/bin/env python
 """Destroy All Packages in myrepouser/myrepo"""
 from __future__ import print_function
