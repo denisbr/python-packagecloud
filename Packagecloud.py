@@ -297,15 +297,25 @@ def get_all_packages(user, repo, config):
 
        GET /api/v1/repos/:user/:repo/packages.json
     """
-    packages = {}
-    url = "{}/repos/{}/{}/packages.json".format(config['url_base'], user, repo)
+    packages = []
+    total = 1
+    fetched = 0
+    offset = 1
 
-    try:
-        resp = (api_call(url, 'get', config['debug']))
-        packages = resp.json()
-    except ValueError as ex:
-        abort("Unexpected response from packagecloud API: "
-              "{}".format(ex.message))
+    while fetched < total:
+        url = "{}/repos/{}/{}/packages.json?page={}".format(config['url_base'],
+                                                            user, repo, offset)
+        try:
+            resp = (api_call(url, 'get', config['debug']))
+            packages = packages + resp.json()
+            total = int(resp.headers['Total'])
+            perpage = int(resp.headers['Per-Page'])
+            fetched += perpage
+            offset += 1
+
+        except ValueError as ex:
+            abort("Unexpected response from packagecloud API: "
+                  "{}".format(ex.message))
 
     return packages
 
@@ -321,6 +331,26 @@ def destroy_package(package, config):
 
     try:
         resp = (api_call(url, 'delete', config['debug']))
+        resp.json()
+    except ValueError as ex:
+        abort("Unexpected response from packagecloud API: "
+              "{}".format(ex.message))
+
+    return True
+
+
+def promote_package(package, repouser, destination, config):
+    """Promote named package to destination repo
+
+       https://packagecloud.io/docs/api#resource_packages_method_promote
+
+       POST /api/v1/repos/:user/:repo/:distro/:version/:package/promote.json
+    """
+    url = "{}{}".format(config['domain_base'], package['promote_url'])
+    postdata = ("destination=%s/%s" % (repouser, destination))
+
+    try:
+        resp = (api_call(url, 'post', config['debug'], data=postdata))
         resp.json()
     except ValueError as ex:
         abort("Unexpected response from packagecloud API: "
