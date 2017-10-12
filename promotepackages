@@ -1,0 +1,109 @@
+#!/usr/bin/env python
+"""Promote Packages"""
+from __future__ import print_function
+import argparse
+import ConfigParser
+
+from Packagecloud import get_all_packages
+from Packagecloud import promote_package
+
+
+def configure():
+    """Configure"""
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--config', required=True,
+                        help='Config file')
+    parser.add_argument('--srcrepo', required=True,
+                        help='Source Repository')
+    parser.add_argument('--destrepo', required=True,
+                        help='Destination Repository')
+    parser.add_argument('--interactive', action='store_true',
+                        help='Interactive Mode')
+    parser.add_argument('--distro', required=False,
+                        help='Filter selection by distro')
+    parser.add_argument('--version', required=False,
+                        help='Filter selection by package version')
+    parser.add_argument('--name', required=False,
+                        help='Filter selection by package name')
+    parser.add_argument('--match', required=False,
+                        help='Filter selection by filename substring match')
+    parser.add_argument('--debug', action='store_true',
+                        help='Print debug output')
+    args = parser.parse_args()
+
+    config = ConfigParser.SafeConfigParser()
+    config.read(args.config)
+
+    token = config.get('packagecloud', 'token')
+    http_scheme = config.get('packagecloud', 'http_scheme')
+    api_domain = config.get('packagecloud', 'api_domain')
+    api_version = config.get('packagecloud', 'api_version')
+
+    conf = {
+        'domain_base': '{}://{}:@{}'.format(
+            http_scheme, token, api_domain),
+        'url_base': '{}://{}:@{}/api/{}'.format(
+            http_scheme, token, api_domain, api_version),
+        'repouser': config.get('packagecloud', 'repo_user'),
+        'srcrepo': args.srcrepo,
+        'destrepo': args.destrepo,
+        'debug': args.debug,
+        'interactive': args.interactive,
+        'distro': args.distro,
+        'version': args.version,
+        'name': args.name,
+        'match': args.match,
+        'args': args
+    }
+
+    return conf
+
+
+def main():
+    """Main"""
+    conf = configure()
+
+    procount = 0
+    skpcount = 0
+    errcount = 0
+    packages = get_all_packages(conf['repouser'], conf['srcrepo'], conf)
+    for package in packages:
+        if conf['distro'] and not package['distro_version'] == conf['distro']:
+            continue
+        elif conf['version'] and not package['version'] == conf['version']:
+            continue
+        elif conf['name'] and not package['name'] == conf['name']:
+            continue
+        elif conf['match'] and not conf['match'] in package['filename']:
+            continue
+
+        print('Going to promote {} from {}/{} to {}/{}'.format(
+            package['filename'], conf['repouser'], conf['srcrepo'],
+            conf['repouser'], conf['destrepo']))
+
+        if conf['interactive']:
+            promote = raw_input("Promote this package (y/N)? ").lower() == 'y'
+        else:
+            promote = True
+
+        if promote:
+            promoteresult = promote_package(package, conf['repouser'],
+                                            conf['destrepo'], conf)
+            if promoteresult:
+                print('{} promoted to {}/{} successfully'.format(
+                    package['filename'], conf['repouser'], conf['destrepo']))
+                procount += 1
+            else:
+                print('ERR: failed promoting {}')
+                errcount += 1
+        else:
+            print('Skipped {}'.format(package['filename']))
+            skpcount += 1
+
+    print('-----------------------------------------')
+    print('Total packages processed: ', (procount + skpcount + errcount))
+    print('Promoted: ', procount)
+    print('Skipped:  ', skpcount)
+    print('Errors:   ', errcount)
+
+main()

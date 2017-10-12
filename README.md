@@ -12,7 +12,7 @@ https://packagecloud.io/docs/api
 
 ## Usage
 
-Example of how to destroy all packages in a given repo:
+Minimal example of how to destroy all packages in a given repo:
 
 ```python
 #!/usr/bin/env python
@@ -53,3 +53,25 @@ def main():
 
 main()
 ```
+
+## Tools
+
+A handful of CLI tools are bundled in this repo:
+
+* ``listpackages`` - list packages in given repo
+* ``yankpackages`` - yank packages interactively or by filters
+* ``promotepackages`` - promote packages interactively or by filters
+* ``downloadpackages`` - (batch) download packages interactively or by filters
+
+### Usage
+
+Configure your API token and username in a config file (see ``example.cfg``).
+Then run the tools like so:
+
+```
+$ listpackages --config example.cfg --srcrepo myrepo --help
+$ yankpackages --config example.cfg --srcrepo myrepo --help
+$ promotepackages --config example.cfg --srcrepo myrepo --help
+$ downloadpackages --config example.cfg --srcrepo myrepo --help
+```
+

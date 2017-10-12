@@ -5,12 +5,18 @@
    * master and read-tokens
    * packages
    * stats
+   * stream based download
+
+   TODO:
+   * implement package push
+   * implement package "clone" (via download + push)
 
    Packagecloud API reference docs:
    https://packagecloud.io/docs/api
 """
 
 from __future__ import print_function
+import shutil
 import sys
 import time
 
@@ -359,6 +365,27 @@ def promote_package(package, repouser, destination, config):
     return True
 
 
+def download_package(package, filepath, config):
+    """Download named package to filepath"""
+    resp = None
+    req = Request('GET', package['download_url'])
+    local_filename = "{}/{}".format(filepath, package['filename'])
+
+    if config['debug']:
+        print("DEBUG: Request (%s) %s" % ('GET', package['download_url']))
+
+    try:
+        resp = Session().send(
+            Session().prepare_request(req), verify=True, stream=True)
+        with open(local_filename, 'wb') as lfile:
+            shutil.copyfileobj(resp.raw, lfile)
+        resp.raise_for_status()
+    except (HTTPError, ConnectionError, Timeout, IOError) as ex:
+        abort(ex.message)
+
+    return local_filename
+
+
 ###########################################################
 # Packagecloud Statistics                                 #
 # https://packagecloud.io/docs/api#resource_stats         #
@@ -405,3 +432,27 @@ def get_dldetails(package, startdate, config):
               "{}".format(ex.message))
 
     return dldetails
+
+
+def get_dlseries(package, startdate, interval, config):
+    """Get download series for a given package and interval
+
+       https://packagecloud.io/docs/api#resource_stats_method_downloads_series
+
+       GET /api/v1/repos/:user/:repo/package/:type/:distro/:version/:package/
+           :arch/:package_version/:release/stats/downloads/series/:interval.json
+    """
+
+    dl_series_url = package['downloads_series_url'].replace("daily", interval)
+    url = "{}{}?start_date={}".format(config['domain_base'],
+                                      dl_series_url,
+                                      startdate)
+
+    try:
+        resp = (api_call(url, 'get', config['debug']))
+        dlseries = resp.json()
+    except ValueError as ex:
+        abort("Unexpected response from packagecloud API: "
+              "{}".format(ex.message))
+
+    return dlseries['value']

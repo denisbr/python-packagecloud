@@ -1,0 +1,91 @@
+#!/usr/bin/env python
+"""List Packages"""
+from __future__ import print_function
+import argparse
+import ConfigParser
+
+from Packagecloud import get_all_packages
+
+
+def configure():
+    """Configure"""
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--config', required=True,
+                        help='Config file')
+    parser.add_argument('--srcrepo', required=True,
+                        help='Source Repository')
+    parser.add_argument('--distro', required=False,
+                        help='Filter selection by distro')
+    parser.add_argument('--version', required=False,
+                        help='Filter selection by package version')
+    parser.add_argument('--name', required=False,
+                        help='Filter selection by package name')
+    parser.add_argument('--match', required=False,
+                        help='Filter selection by filename substring match')
+    parser.add_argument('--dlurl', required=False,
+                        help='Display download URLs')
+    parser.add_argument('--wget', required=False,
+                        help='Display wget commands')
+    parser.add_argument('--debug', action='store_true',
+                        help='Print debug output')
+    args = parser.parse_args()
+
+    config = ConfigParser.SafeConfigParser()
+    config.read(args.config)
+
+    token = config.get('packagecloud', 'token')
+    http_scheme = config.get('packagecloud', 'http_scheme')
+    api_domain = config.get('packagecloud', 'api_domain')
+    api_version = config.get('packagecloud', 'api_version')
+
+    conf = {
+        'domain_base': '{}://{}:@{}'.format(
+            http_scheme, token, api_domain),
+        'url_base': '{}://{}:@{}/api/{}'.format(
+            http_scheme, token, api_domain, api_version),
+        'repouser': config.get('packagecloud', 'repo_user'),
+        'srcrepo': args.srcrepo,
+        'debug': args.debug,
+        'distro': args.distro,
+        'version': args.version,
+        'name': args.name,
+        'match': args.match,
+        'dlurl': args.dlurl,
+        'wget': args.wget,
+        'args': args
+    }
+
+    return conf
+
+
+def main():
+    """Main"""
+    conf = configure()
+
+    numpkgs = 0
+    packages = get_all_packages(conf['repouser'],
+                                conf['srcrepo'], conf)
+
+    for package in packages:
+        if conf['distro'] and not package['distro_version'] == conf['distro']:
+            continue
+        elif conf['version'] and not package['version'] == conf['version']:
+            continue
+        elif conf['name'] and not package['name'] == conf['name']:
+            continue
+        elif conf['match'] and not conf['match'] in package['filename']:
+            continue
+
+        print('{}/{}/{} ({})'.format(
+            conf['repouser'], conf['srcrepo'], package['filename'],
+            package['distro_version']))
+        if conf['dlurl']:
+            print('{}'.format(package['download_url']))
+        if conf['wget']:
+            print('wget -O {} {}'.format(package['filename'],
+                                         package['download_url']))
+        numpkgs += 1
+
+    print("Repo contains %s matching packages in total" % numpkgs)
+
+main()
