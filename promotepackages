@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python -u
 """Promote Packages"""
 from __future__ import print_function
 import argparse
@@ -25,6 +25,8 @@ def configure():
                         help='Filter selection by package version')
     parser.add_argument('--name', required=False,
                         help='Filter selection by package name')
+    parser.add_argument('--type', required=False,
+                        help='Filter selection by package type')
     parser.add_argument('--match', required=False,
                         help='Filter selection by filename substring match')
     parser.add_argument('--debug', action='store_true',
@@ -52,6 +54,7 @@ def configure():
         'distro': args.distro,
         'version': args.version,
         'name': args.name,
+        'type': args.type,
         'match': args.match,
         'args': args
     }
@@ -74,12 +77,14 @@ def main():
             continue
         elif conf['name'] and not package['name'] == conf['name']:
             continue
+        elif conf['type'] and not conf['type'] == package['type']:
+            continue
         elif conf['match'] and not conf['match'] in package['filename']:
             continue
 
-        print('Going to promote {} from {}/{} to {}/{}'.format(
-            package['filename'], conf['repouser'], conf['srcrepo'],
-            conf['repouser'], conf['destrepo']))
+        print('Going to promote {:<45} from {:>15}/{:<15} to {:>15}/{:<15}'.
+              format(package['filename'], conf['repouser'], conf['srcrepo'],
+                     conf['repouser'], conf['destrepo']), end='')
 
         if conf['interactive']:
             promote = raw_input("Promote this package (y/N)? ").lower() == 'y'
@@ -90,11 +95,12 @@ def main():
             promoteresult = promote_package(package, conf['repouser'],
                                             conf['destrepo'], conf)
             if promoteresult:
-                print('{} promoted to {}/{} successfully'.format(
-                    package['filename'], conf['repouser'], conf['destrepo']))
+                print('[OK]')
+#                 print('{} promoted to {}/{} successfully'.format(
+#                     package['filename'], conf['repouser'], conf['destrepo']))
                 procount += 1
             else:
-                print('ERR: failed promoting {}')
+                print('[ERROR]')
                 errcount += 1
         else:
             print('Skipped {}'.format(package['filename']))

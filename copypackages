@@ -1,12 +1,14 @@
 #!/usr/bin/env python -u
-"""Download Packages"""
+"""Copy Packages from one repo to another"""
 from __future__ import print_function
 import argparse
 import ConfigParser
+import shutil
+import tempfile
 
+from Packagecloud import create_package
 from Packagecloud import download_package
 from Packagecloud import get_all_packages
-from Packagecloud import show_packagelist
 
 
 def configure():
@@ -16,6 +18,8 @@ def configure():
                         help='Config file')
     parser.add_argument('--srcrepo', required=True,
                         help='Source Repository')
+    parser.add_argument('--destrepo', required=True,
+                        help='Destination Repository')
     parser.add_argument('--interactive', action='store_true',
                         help='Interactive Mode')
     parser.add_argument('--distro', required=False,
@@ -47,6 +51,7 @@ def configure():
             http_scheme, token, api_domain, api_version),
         'repouser': config.get('packagecloud', 'repo_user'),
         'srcrepo': args.srcrepo,
+        'destrepo': args.destrepo,
         'debug': args.debug,
         'interactive': args.interactive,
         'distro': args.distro,
@@ -60,20 +65,24 @@ def configure():
     return conf
 
 
+def copy_package(package, repouser, destrepo, config):
+    """Download package to /tmp and then upload it"""
+    dirpath = tempfile.mkdtemp()
+    filename = download_package(package, dirpath, config)
+    result = create_package(repouser, destrepo, filename,
+                            package['distro_version'], config)
+    shutil.rmtree(dirpath)
+    return result
+
+
 def main():
     """Main"""
     conf = configure()
 
-    packages = get_all_packages(conf['repouser'], conf['srcrepo'], conf)
-
-    show_packagelist(conf['repouser'], conf['srcrepo'], packages,
-                     conf['distro'], conf['version'], conf['name'],
-                     conf['match'])
-
-    dwncount = 0
+    copycount = 0
     skpcount = 0
     errcount = 0
-    dwnl = True
+    packages = get_all_packages(conf['repouser'], conf['srcrepo'], conf)
     for package in packages:
         if conf['distro'] and not package['distro_version'] == conf['distro']:
             continue
@@ -86,29 +95,33 @@ def main():
         elif conf['match'] and not conf['match'] in package['filename']:
             continue
 
-        print('Going to download {} from {}/{}'.format(
-            package['filename'], conf['repouser'], conf['srcrepo']))
+        print('Copy {:<45} {:<20} from {:>15}/{:<15} to {:>15}/{:<15} '.
+              format(package['filename'], package['distro_version'],
+                     conf['repouser'], conf['srcrepo'], conf['repouser'],
+                     conf['destrepo']), end='')
 
         if conf['interactive']:
-            dwnl = raw_input("Download this package (y/N)? ").lower() == 'y'
+            copy = raw_input("(y/N)? ").lower() == 'y'
+        else:
+            copy = True
 
-        if dwnl:
-            downloadresult = download_package(package, '.', conf)
-            if downloadresult:
-                print('{} downloaded from {}/{} successfully'.format(
-                    package['filename'], conf['repouser'], conf['srcrepo']))
-                dwncount += 1
+        if copy:
+            copyresult = copy_package(package, conf['repouser'],
+                                      conf['destrepo'], conf)
+            if copyresult:
+                print('[OK]')
+                copycount += 1
             else:
-                print('ERR: failed download {}')
+                print('[ERROR]')
                 errcount += 1
         else:
             print('Skipped {}'.format(package['filename']))
             skpcount += 1
 
     print('-----------------------------------------')
-    print('Total packages processed: ', (dwncount + skpcount + errcount))
-    print('Downloaded:  ', dwncount)
-    print('Skipped:     ', skpcount)
-    print('Errors:      ', errcount)
+    print('Total packages processed: ', (copycount + skpcount + errcount))
+    print('Copied:   ', copycount)
+    print('Skipped:  ', skpcount)
+    print('Errors:   ', errcount)
 
 main()
