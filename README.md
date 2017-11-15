@@ -58,20 +58,32 @@ main()
 
 A handful of CLI tools are bundled in this repo:
 
+* ``copypackages`` - copy packages between repos
+* ``downloadpackages`` - download packages interactively or by filters
 * ``listpackages`` - list packages in given repo
-* ``yankpackages`` - yank packages interactively or by filters
 * ``promotepackages`` - promote packages interactively or by filters
-* ``downloadpackages`` - (batch) download packages interactively or by filters
+* ``yankpackages`` - yank packages interactively or by filters
 
 ### Usage
 
 Configure your API token and username in a config file (see ``example.cfg``).
+Use ``-h`` or ``--help`` for options:
+
+```
+$ copypackages --help
+$ downloadpackages --help
+$ listpackages --help
+$ promotepackages --help
+$ yankpackages --help
+```
+
 Then run the tools like so:
 
 ```
-$ listpackages --config example.cfg --srcrepo myrepo --help
-$ yankpackages --config example.cfg --srcrepo myrepo --help
-$ promotepackages --config example.cfg --srcrepo myrepo --help
-$ downloadpackages --config example.cfg --srcrepo myrepo --help
+$ copypackages --config example.cfg --srcrepo sourcerepo --destrepo destinationrepo
+$ downloadpackages --config example.cfg --srcrepo sourcerepo
+$ listpackages --config example.cfg --srcrepo sourcerepo
+$ promotepackages --config example.cfg --srcrepo sourcerepo --destrepo destinationrepo
+$ yankpackages --config example.cfg --srcrepo clearthisrepo
 ```
 
