@@ -10,6 +10,24 @@ Implements functions for working with:
 Packagecloud API reference docs:
 https://packagecloud.io/docs/api
 
+## Installing
+
+python-packagecloud has few dependencies, which are listed in requirements.txt.
+
+To install, simply:
+
+```bash
+python3 -m venv .venv/
+.venv/bin/pip install -r requirements.txt
+```
+
+You can then source the venv in your environment to use the scripts:
+
+```bash
+source .venv/bin/activate
+```
+
+
 ## Usage
 
 Minimal example of how to destroy all packages in a given repo:
