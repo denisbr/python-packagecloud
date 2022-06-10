@@ -1,8 +1,8 @@
-#!/usr/bin/env python -u
+#!/usr/bin/env python
 """Destroy Packages"""
-from __future__ import print_function
+
 import argparse
-import ConfigParser
+import configparser
 
 from Packagecloud import abort
 from Packagecloud import destroy_package
@@ -35,7 +35,7 @@ def configure():
                         help='Print debug output')
     args = parser.parse_args()
 
-    config = ConfigParser.SafeConfigParser()
+    config = configparser.SafeConfigParser()
     config.read(args.config)
 
     token = config.get('packagecloud', 'token')
@@ -76,7 +76,7 @@ def main():
                          conf['match'], conf['type'])
 
     if not conf['interactive'] and not conf['force']:
-        yankall = raw_input("Are you sure you want to yank all (y/N)? "). \
+        yankall = input("Are you sure you want to yank all (y/N)? "). \
             lower() == 'y'
         if not yankall:
             abort('Aborted', 1)
@@ -101,7 +101,7 @@ def main():
             package['filename'], conf['repouser'], conf['srcrepo']), end='')
 
         if conf['interactive']:
-            yank = raw_input("Yank this package (y/N)? ").lower() == 'y'
+            yank = input("Yank this package (y/N)? ").lower() == 'y'
 
         if yank:
             yankresult = destroy_package(package, conf)

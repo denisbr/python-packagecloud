@@ -12,7 +12,7 @@
    https://packagecloud.io/docs/api
 """
 
-from __future__ import print_function
+
 import shutil
 import sys
 import time

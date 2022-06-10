@@ -1,8 +1,8 @@
-#!/usr/bin/env python -u
+#!/usr/bin/env python
 """Download Packages"""
-from __future__ import print_function
+
 import argparse
-import ConfigParser
+import configparser
 
 from Packagecloud import download_package
 from Packagecloud import get_all_packages
@@ -32,7 +32,7 @@ def configure():
                         help='Print debug output')
     args = parser.parse_args()
 
-    config = ConfigParser.SafeConfigParser()
+    config = configparser.SafeConfigParser()
     config.read(args.config)
 
     token = config.get('packagecloud', 'token')
@@ -90,7 +90,7 @@ def main():
             package['filename'], conf['repouser'], conf['srcrepo']))
 
         if conf['interactive']:
-            dwnl = raw_input("Download this package (y/N)? ").lower() == 'y'
+            dwnl = input("Download this package (y/N)? ").lower() == 'y'
 
         if dwnl:
             downloadresult = download_package(package, '.', conf)
