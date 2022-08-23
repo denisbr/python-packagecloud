@@ -1,6 +1,10 @@
 # Packagecloud
 
-Python Module for Packagecloud
+*NOTE: Mostly unmaintained at the moment as I don't use Packagecloud for my work anymore.*
+
+
+
+## Python Module for Packagecloud
 
 Implements functions for working with:
 * master and read-tokens
